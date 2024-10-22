@@ -1,8 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
 using PortalAdm.Core.Interfaces;
 using PortalAdm.Infrastructure.Data;
 using PortalAdm.SharedKernel.Security;
+using PortalAdm.SharedKernel.Util;
 
 namespace PortalAdm.Infrastructure.Repository;
 
@@ -33,15 +36,43 @@ public class UserRepository : IUserRepository
         return _passwordHasher.VerifyPassword(user.PasswordHash, password) ? user : null;
     }
 
-    public async Task<IEnumerable<User>> GetAllAsync()
+    public async Task<IEnumerable<UserListResponse>> GetAllAsync()
     {
-        return await _context.Users.ToListAsync();
+        return await _context.Users
+            .Select(user => new UserListResponse
+            {
+                Id = user.Id,
+                ClientId = user.ClientId,
+                Name = user.Name,
+                Email = user.Email,
+                Role = EnumUtil.GetEnumDescription(user.Role),
+                IsActive = user.IsActive
+            })
+            .ToListAsync();
     }
 
-    public async Task AddAsync(User user)
+    public async Task<string> AddAsync(User user)
     {
-        await _context.Users.AddAsync(user);
-        await _context.SaveChangesAsync();
+        try
+        {
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
+            if (existingUser != null)
+            {
+                return "Um usuário com esse email já existe!";
+            }
+            await _context.Users.AddAsync(user);
+            int result = await _context.SaveChangesAsync();
+            if (result > 0)
+            {
+                return string.Empty;
+            }
+
+            return "Erro ao registrar usuário!";
+        }
+        catch (Exception ex)
+        {
+            return $"Erro ao adicionar usuário: {ex.Message}";
+        }
     }
 
     public async Task UpdateAsync(User user)

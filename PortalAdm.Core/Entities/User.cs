@@ -11,9 +11,21 @@ namespace PortalAdm.Core.Entities
         public string PasswordHash { get; private set; }
         public bool IsActive { get; private set; }
         public Roles Role { get; private set; }
+        public Guid ClientId { get; private set; }
+        
+        public User(string message)
+        {
+            Id = Guid.Empty;
+            Name = message;
+            Email = String.Empty;
+            PasswordHash = String.Empty;
+            Role = Roles.Usuario;
+            IsActive = false;
+            ClientId = Guid.Empty;
+        }
 
         
-        public User(string name, string email, string passwordHash, Roles role)
+        public User(string name, string email, string passwordHash, Roles role, Guid clientId)
         {
             Id = Guid.NewGuid();
             Name = name;
@@ -21,6 +33,7 @@ namespace PortalAdm.Core.Entities
             PasswordHash = passwordHash;
             Role = role;
             IsActive = true;
+            ClientId = clientId;
         }
 
         public void Deactivate()

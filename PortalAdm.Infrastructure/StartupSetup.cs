@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PortalAdm.Core.Entities;
+using PortalAdm.Core.Enums;
 using PortalAdm.Core.Interfaces;
 using PortalAdm.Infrastructure.Data;
 using PortalAdm.Infrastructure.Identity;
@@ -15,6 +17,7 @@ public static class StartupSetup
     public static void AddInfrastructuresServices(this IServiceCollection services)
     {
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IClientRepository, ClientRepository>();
         services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
     }
     

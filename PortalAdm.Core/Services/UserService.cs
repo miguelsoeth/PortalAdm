@@ -1,7 +1,10 @@
 using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
+using PortalAdm.Core.Enums;
 using PortalAdm.Core.Interfaces;
+using PortalAdm.SharedKernel;
 using PortalAdm.SharedKernel.Security;
+using PortalAdm.SharedKernel.Util;
 
 namespace PortalAdm.Core.Services;
 
@@ -16,22 +19,53 @@ public class UserService : IUserService
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<User> RegisterUserAsync(RegistrarRequest request)
+    public async Task<User> RegisterUserAsync(RegistrarUsuarioRequest usuarioRequest, string? userRole)
     {
-        if (string.IsNullOrWhiteSpace(request.Name) || 
-            string.IsNullOrWhiteSpace(request.Email) || 
-            string.IsNullOrWhiteSpace(request.Password))
+        if (userRole == nameof(Roles.UsuarioGestor) && usuarioRequest.Role == nameof(Roles.Administrador))
         {
-            throw new ArgumentException("Name, email, and password cannot be empty.");
+            return new User("Não é possível registrar um Administrador!");
+        }
+        
+        if (string.IsNullOrWhiteSpace(usuarioRequest.Name))
+        {
+            return new User("Nome é obrigatório");
         }
 
-        var passwordHash = _passwordHasher.HashPassword(request.Password);
+        if (string.IsNullOrWhiteSpace(usuarioRequest.Email))
+        {
+            return new User("Email é obrigatório");
+        }
 
-        var user = new User(request.Name, request.Email, passwordHash, request.Role);
+        if (string.IsNullOrWhiteSpace(usuarioRequest.Password))
+        {
+            return new User("Senha é obrigatória");
+        }
 
-        await _userRepository.AddAsync(user);
+        if (string.IsNullOrWhiteSpace(usuarioRequest.Role))
+        {
+            return new User("Papel é obrigatório");
+        }
+        
+        if (string.IsNullOrWhiteSpace(usuarioRequest.ClientID))
+        {
+            return new User("ClientID é obrigatório");
+        }
 
-        return user;
+
+        var passwordHash = _passwordHasher.HashPassword(usuarioRequest.Password);
+        
+        Roles role = EnumExtensions.GetEnumValueFromDescription<Roles>(usuarioRequest.Role);
+
+        var user = new User(usuarioRequest.Name, usuarioRequest.Email, passwordHash, role, new Guid(usuarioRequest.ClientID));
+
+        string success = await _userRepository.AddAsync(user);
+
+        if (success.Equals(string.Empty))
+        {
+            return user;
+        }
+        
+        return new User(success);
     }
     
     public async Task<User?> LoginUserAsync(LoginRequest request)
@@ -45,5 +79,14 @@ public class UserService : IUserService
         var user = await _userRepository.GetByCredentialsAsync(request.Email, request.Password);
 
         return user;
+    }
+
+    public async Task<IEnumerable<UserListResponse>> GetAllUsersAsync(string? userRole, string? userClient)
+    {
+        if (userRole.Equals(EnumUtil.GetEnumDescription(Roles.UsuarioGestor)))
+        {
+            return await _userRepository.GetAllAsync();
+        }
+        return await _userRepository.GetAllAsync();
     }
 }
