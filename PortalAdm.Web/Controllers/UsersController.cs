@@ -42,7 +42,7 @@ public class UsersController : ControllerBase
     [Authorize(Roles = $"{nameof(Roles.Administrador)},{nameof(Roles.UsuarioGestor)}")]
     public async Task<IActionResult> List()
     {
-        var userRole = User.FindFirst("role")?.Value;
+        var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
         var userClient = User.FindFirst("client")?.Value;
         return Ok(await _userService.GetAllUsersAsync(userRole, userClient));
     }
