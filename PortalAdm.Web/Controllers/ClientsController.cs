@@ -42,4 +42,30 @@ public class ClientsController : ControllerBase
         IEnumerable<Client> c = await _clientService.GetAllClientsAsync();
         return Ok(c);
     }
+    
+    [HttpPost("credit/increase")]
+    [Authorize(Roles = Roles.Administrador)]
+    public async Task<IActionResult> Increase(Guid id, decimal value)
+    {
+        //value = Math.Round(value, 2);
+        AuthResponse response = await _clientService.IncreaseCredit(id, value);
+        if (response.success)
+        {
+            return Ok(response);
+        }
+        return BadRequest(response);
+    }
+    
+    [HttpPost("credit/decrease")]
+    [Authorize(Roles = Roles.Administrador)]
+    public async Task<IActionResult> Decrease(Guid id, decimal value)
+    {
+        //value = Math.Round(value, 2);
+        AuthResponse response = await _clientService.DecreaseCredit(id, value);
+        if (response.success)
+        {
+            return Ok(response);
+        }
+        return BadRequest(response);
+    }
 }

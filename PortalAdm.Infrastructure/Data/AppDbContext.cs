@@ -23,7 +23,7 @@ public class AppDbContext : DbContext
             entity.Property(c => c.Document).IsRequired();
             
             entity.HasData(
-                new Client(_admClientId, "DEPS", "00000000000000")
+                new Client(_admClientId, "DEPS", "00000000000000", 0)
             );
         });
         

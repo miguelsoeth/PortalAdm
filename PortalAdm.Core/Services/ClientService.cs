@@ -25,7 +25,7 @@ public class ClientService : IClientService
             return new Client("Documento é obrigatório");
         }
         
-        var client = new Client(clienteRequest.Name, clienteRequest.Document);
+        var client = new Client(clienteRequest.Name, clienteRequest.Document, 0);
         string success = await _clientRepository.AddAsync(client);
         
         if (success.Equals(string.Empty))
@@ -40,5 +40,29 @@ public class ClientService : IClientService
     public async Task<IEnumerable<Client>> GetAllClientsAsync()
     {
         return await _clientRepository.GetAllAsync();
+    }
+    
+    public async Task<AuthResponse> IncreaseCredit(Guid id, decimal value)
+    {
+        string result = await _clientRepository.IncreaseCredit(id, value);
+
+        if (result.Equals(String.Empty))
+        {
+            return new AuthResponse(true, string.Empty, "Crédito adicionado!");
+        }
+        
+        return new AuthResponse(false, string.Empty, result);
+    }
+    
+    public async Task<AuthResponse> DecreaseCredit(Guid id, decimal value)
+    {
+        string result = await _clientRepository.DecreaseCredit(id, value);
+
+        if (result.Equals(String.Empty))
+        {
+            return new AuthResponse(true, string.Empty, "Crédito diminuído!");
+        }
+        
+        return new AuthResponse(false, string.Empty, result);
     }
 }

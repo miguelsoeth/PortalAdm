@@ -47,4 +47,52 @@ public class ClientRepository : IClientRepository
             return $"Erro ao adicionar cliente: {ex.Message}";
         }
     }
+    
+    public async Task<string> IncreaseCredit(Guid id, decimal value)
+    {
+        try
+        {
+            var client = await GetById(id);
+            if (client == null) throw new Exception("Não foi possível encontrar o cliente");
+            
+            client.IncreaseCredit(value);
+            
+            _context.Clients.Update(client);
+            int result = await _context.SaveChangesAsync();
+            if (result > 0)
+            {
+                return string.Empty;
+            }
+
+            throw new Exception("Não foi possível atualizar o crédito do cliente");
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+    }
+    
+    public async Task<string> DecreaseCredit(Guid id, decimal value)
+    {
+        try
+        {
+            var client = await GetById(id);
+            if (client == null) throw new Exception("Não foi possível encontrar o cliente");
+            
+            client.DecreaseCredit(value);
+            
+            _context.Clients.Update(client);
+            int result = await _context.SaveChangesAsync();
+            if (result > 0)
+            {
+                return string.Empty;
+            }
+
+            throw new Exception("Não foi possível atualizar o crédito do cliente");
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+    }
 }
