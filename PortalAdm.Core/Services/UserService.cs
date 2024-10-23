@@ -1,6 +1,5 @@
 using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
-using PortalAdm.Core.Enums;
 using PortalAdm.Core.Interfaces;
 using PortalAdm.SharedKernel;
 using PortalAdm.SharedKernel.Security;
@@ -19,9 +18,9 @@ public class UserService : IUserService
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<User> RegisterUserAsync(RegistrarUsuarioRequest usuarioRequest, string? userRole)
+    public async Task<User> RegisterUserAsync(RegistrarUsuarioRequest usuarioRequest, string userRole, string userClient)
     {
-        if (userRole == nameof(Roles.UsuarioGestor) && usuarioRequest.Role == nameof(Roles.Administrador))
+        if (userRole == Roles.UsuarioGestor && usuarioRequest.Role == Roles.Administrador)
         {
             return new User("Não é possível registrar um Administrador!");
         }
@@ -46,17 +45,19 @@ public class UserService : IUserService
             return new User("Papel é obrigatório");
         }
         
-        if (string.IsNullOrWhiteSpace(usuarioRequest.ClientID))
+        if (userRole == Roles.Administrador && string.IsNullOrWhiteSpace(usuarioRequest.ClientId))
         {
             return new User("ClientID é obrigatório");
         }
 
+        if (userRole == Roles.UsuarioGestor)
+        {
+            usuarioRequest.ClientId = userClient;
+        }
 
         var passwordHash = _passwordHasher.HashPassword(usuarioRequest.Password);
-        
-        Roles role = EnumExtensions.GetEnumValueFromDescription<Roles>(usuarioRequest.Role);
 
-        var user = new User(usuarioRequest.Name, usuarioRequest.Email, passwordHash, role, new Guid(usuarioRequest.ClientID));
+        var user = new User(usuarioRequest.Name, usuarioRequest.Email, passwordHash, usuarioRequest.Role, new Guid(usuarioRequest.ClientId));
 
         string success = await _userRepository.AddAsync(user);
 
@@ -81,11 +82,11 @@ public class UserService : IUserService
         return user;
     }
 
-    public async Task<IEnumerable<UserListResponse>> GetAllUsersAsync(string? userRole, string? userClient)
+    public async Task<IEnumerable<UserListResponse>> GetAllUsersAsync(string userRole, string userClient)
     {
-        if (userRole.Equals(EnumUtil.GetEnumDescription(Roles.UsuarioGestor)))
+        if (userRole.Equals(Roles.UsuarioGestor))
         {
-            return await _userRepository.GetAllAsync();
+            return await _userRepository.GetForClientAsync(userClient);
         }
         return await _userRepository.GetAllAsync();
     }

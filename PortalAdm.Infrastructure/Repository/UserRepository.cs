@@ -45,7 +45,7 @@ public class UserRepository : IUserRepository
                 ClientId = user.ClientId,
                 Name = user.Name,
                 Email = user.Email,
-                Role = EnumUtil.GetEnumDescription(user.Role),
+                Role = user.Role,
                 IsActive = user.IsActive
             })
             .ToListAsync();
@@ -89,5 +89,23 @@ public class UserRepository : IUserRepository
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task<IEnumerable<UserListResponse>> GetForClientAsync(string userClient)
+    {
+        Guid userClientId = new Guid(userClient);
+        
+        return await _context.Users
+            .Where(user => user.ClientId == userClientId)
+            .Select(user => new UserListResponse
+            {
+                Id = user.Id,
+                ClientId = user.ClientId,
+                Name = user.Name,
+                Email = user.Email,
+                Role = user.Role,
+                IsActive = user.IsActive
+            })
+            .ToListAsync();
     }
 }

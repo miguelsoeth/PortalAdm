@@ -1,13 +1,8 @@
-using System.ComponentModel;
-using System.Reflection;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Extensions;
 using PortalAdm.Core.Entities;
 using PortalAdm.Core.DTOs;
-using PortalAdm.Core.Enums;
 using PortalAdm.Core.Interfaces;
 using PortalAdm.SharedKernel.Util;
 
@@ -27,33 +22,50 @@ public class UsersController : ControllerBase
     }
     
     [HttpGet("roles")]
-    [Authorize(Roles = nameof(Roles.Administrador))]
+    [Authorize(Roles = $"{Roles.Administrador},{Roles.UsuarioGestor}")]
     public async Task<IActionResult> AllRoles()
     {
-        var roles = Enum.GetValues(typeof(Roles))
-            .Cast<Roles>()
-            .Select(role => EnumUtil.GetEnumDescription(role))
-            .ToList();
+        var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+        if (userRole == null)
+            return BadRequest(new AuthResponse(false, String.Empty, "Erro ao adquirir Role do usuário atual!"));
+
+        if (userRole.Equals(Roles.UsuarioGestor))
+        {
+            return Ok(Roles.GetPublicRoles());
+        }
         
-        return Ok(roles);
+        return Ok(Roles.GetAllRoles());
     }
 
     [HttpGet("list")]
-    [Authorize(Roles = $"{nameof(Roles.Administrador)},{nameof(Roles.UsuarioGestor)}")]
+    [Authorize(Roles = $"{Roles.Administrador},{Roles.UsuarioGestor}")]
     public async Task<IActionResult> List()
     {
         var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
         var userClient = User.FindFirst("client")?.Value;
+
+        if (userRole == null || userClient == null )
+        {
+            AuthResponse response = new AuthResponse(false, string.Empty, "Erro ao obter Role/Cliente do usuário!");
+            return BadRequest(response);
+        }
+            
         return Ok(await _userService.GetAllUsersAsync(userRole, userClient));
     }
     
     [HttpPost("register")]
-    [Authorize(Roles = $"{nameof(Roles.Administrador)},{nameof(Roles.UsuarioGestor)}")]
+    [Authorize(Roles = $"{Roles.Administrador},{Roles.UsuarioGestor}")]
     public async Task<IActionResult> Register(RegistrarUsuarioRequest usuarioRequest)
     {
-        
         var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-        User u = await _userService.RegisterUserAsync(usuarioRequest, userRole);
+        var userClient = User.FindFirst("client")?.Value;
+        
+        if (userRole == null || userClient == null)
+            return BadRequest(new AuthResponse(false, String.Empty, "Erro ao adquirir informações do usuário atual!"));
+        
+        
+        User u = await _userService.RegisterUserAsync(usuarioRequest, userRole, userClient);
         
         if (u.IsActive)
         {

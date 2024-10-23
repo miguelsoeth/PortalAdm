@@ -12,4 +12,5 @@ public interface IUserRepository
     Task<string> AddAsync(User user);
     Task UpdateAsync(User user);
     Task DeleteAsync(Guid id);
+    Task<IEnumerable<UserListResponse>> GetForClientAsync(string userClient);
 }

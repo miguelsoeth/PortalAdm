@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using PortalAdm.Core.Entities;
-using PortalAdm.Core.Enums;
 
 namespace PortalAdm.Infrastructure.Data;
 

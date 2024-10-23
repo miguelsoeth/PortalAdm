@@ -1,8 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using PortalAdm.Core.Entities;
-using PortalAdm.Core.Enums;
 using PortalAdm.Core.Interfaces;
 using PortalAdm.Infrastructure.Data;
 using PortalAdm.Infrastructure.Identity;

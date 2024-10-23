@@ -1,4 +1,3 @@
-using PortalAdm.Core.Enums;
 using PortalAdm.SharedKernel.Security;
 
 namespace PortalAdm.Core.Entities
@@ -10,7 +9,7 @@ namespace PortalAdm.Core.Entities
         public string Email { get; private set; }
         public string PasswordHash { get; private set; }
         public bool IsActive { get; private set; }
-        public Roles Role { get; private set; }
+        public string Role { get; private set; }
         public Guid ClientId { get; private set; }
         
         public User(string message)
@@ -19,13 +18,13 @@ namespace PortalAdm.Core.Entities
             Name = message;
             Email = String.Empty;
             PasswordHash = String.Empty;
-            Role = Roles.Usuario;
+            Role = String.Empty;
             IsActive = false;
             ClientId = Guid.Empty;
         }
 
         
-        public User(string name, string email, string passwordHash, Roles role, Guid clientId)
+        public User(string name, string email, string passwordHash, string role, Guid clientId)
         {
             Id = Guid.NewGuid();
             Name = name;
@@ -46,7 +45,7 @@ namespace PortalAdm.Core.Entities
             IsActive = true;
         }
 
-        public void ChangeRole(Roles role)
+        public void ChangeRole(string role)
         {
             Role = role;
         }

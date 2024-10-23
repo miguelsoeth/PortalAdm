@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
-using PortalAdm.Core.Enums;
 using PortalAdm.Core.Interfaces;
 
 namespace PortalAdm.Controllers;
@@ -19,7 +18,7 @@ public class ClientsController : ControllerBase
     }
     
     [HttpPost("register")]
-    [Authorize(Roles = nameof(Roles.Administrador))]
+    [Authorize(Roles = Roles.Administrador)]
     public async Task<IActionResult> Register(RegistrarClienteRequest clienteRequest)
     {
         Client c = await _clientService.RegisterClientAsync(clienteRequest);
@@ -37,7 +36,7 @@ public class ClientsController : ControllerBase
     }
     
     [HttpGet("list")]
-    [Authorize(Roles = nameof(Roles.Administrador))]
+    [Authorize(Roles = Roles.Administrador)]
     public async Task<IActionResult> List()
     {
         IEnumerable<Client> c = await _clientService.GetAllClientsAsync();
