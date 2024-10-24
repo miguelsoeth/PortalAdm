@@ -15,6 +15,7 @@ public static class StartupSetup
     {
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IClientRepository, ClientRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
     }
     

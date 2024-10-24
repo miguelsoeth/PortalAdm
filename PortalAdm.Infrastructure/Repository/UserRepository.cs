@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Npgsql;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
 using PortalAdm.Core.Interfaces;
@@ -58,7 +60,7 @@ public class UserRepository : IUserRepository
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
             if (existingUser != null)
             {
-                return "Um usuário com esse email já existe!";
+                throw new Exception("Um usuário com esse email já existe!");
             }
             await _context.Users.AddAsync(user);
             int result = await _context.SaveChangesAsync();
@@ -67,11 +69,19 @@ public class UserRepository : IUserRepository
                 return string.Empty;
             }
 
-            return "Erro ao registrar usuário!";
+            throw new Exception("Erro ao registrar usuário!");
         }
         catch (Exception ex)
         {
-            return $"Erro ao adicionar usuário: {ex.Message}";
+            if (ex.InnerException is PostgresException e)
+            {
+                if (e.SqlState == PostgresErrorCodes.ForeignKeyViolation)
+                    return $"Chave estrangeira {e.ConstraintName} incorreta!";
+                
+                return e.Message;
+            }
+            
+            return ex.Message;
         }
     }
 

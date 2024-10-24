@@ -18,55 +18,57 @@ public class UserService : IUserService
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<User> RegisterUserAsync(RegistrarUsuarioRequest usuarioRequest, string userRole, string userClient)
+    public async Task<AuthResponse> RegisterUserAsync(RegistrarUsuarioRequest usuarioRequest, string? userRole, string? userClient)
     {
+        if (userRole == null || userClient == null)
+            return new AuthResponse(false, String.Empty, "Erro ao adquirir informações do usuário atual!");
+        
         if (userRole == Roles.UsuarioGestor && usuarioRequest.Role == Roles.Administrador)
-        {
-            return new User("Não é possível registrar um Administrador!");
-        }
+            return new AuthResponse(false, "Forbid", "Não é permitido adicionar um Administrador!");
+        
+        if (userRole == Roles.UsuarioGestor)
+            usuarioRequest.ClientId = userClient;
+        
+        if (!Roles.GetAllRoles().Contains(usuarioRequest.Role))
+            return new AuthResponse(false, String.Empty, "Papel inexistente!");
         
         if (string.IsNullOrWhiteSpace(usuarioRequest.Name))
         {
-            return new User("Nome é obrigatório");
+            return new AuthResponse(false, String.Empty, "Nome é obrigatório");
         }
 
         if (string.IsNullOrWhiteSpace(usuarioRequest.Email))
         {
-            return new User("Email é obrigatório");
+            return new AuthResponse(false, String.Empty, "Email é obrigatório");
         }
 
         if (string.IsNullOrWhiteSpace(usuarioRequest.Password))
         {
-            return new User("Senha é obrigatória");
+            return new AuthResponse(false, String.Empty, "Senha é obrigatória");
         }
 
         if (string.IsNullOrWhiteSpace(usuarioRequest.Role))
         {
-            return new User("Papel é obrigatório");
+            return new AuthResponse(false, String.Empty, "Papel é obrigatório");
         }
         
         if (userRole == Roles.Administrador && string.IsNullOrWhiteSpace(usuarioRequest.ClientId))
         {
-            return new User("ClientID é obrigatório");
-        }
-
-        if (userRole == Roles.UsuarioGestor)
-        {
-            usuarioRequest.ClientId = userClient;
+            return new AuthResponse(false, String.Empty, "ClientID é obrigatório");
         }
 
         var passwordHash = _passwordHasher.HashPassword(usuarioRequest.Password);
 
-        var user = new User(usuarioRequest.Name, usuarioRequest.Email, passwordHash, usuarioRequest.Role, new Guid(usuarioRequest.ClientId));
+        var user = new User(usuarioRequest.Name, usuarioRequest.Email, passwordHash, usuarioRequest.Role, new Guid(usuarioRequest.ClientId!));
 
         string success = await _userRepository.AddAsync(user);
 
         if (success.Equals(string.Empty))
         {
-            return user;
+            return new AuthResponse(true, String.Empty, "Usuário registrado com sucesso!");
         }
         
-        return new User(success);
+        return new AuthResponse(false, String.Empty, success);
     }
     
     public async Task<User?> LoginUserAsync(LoginRequest request)

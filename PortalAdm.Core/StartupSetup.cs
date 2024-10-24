@@ -11,5 +11,6 @@ public static class StartupSetup
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IClientService, ClientService>();
+        services.AddScoped<IProductService, ProductService>();
     }
 }

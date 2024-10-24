@@ -5,7 +5,7 @@ namespace PortalAdm.Core.Interfaces;
 
 public interface IClientService
 {
-    Task<Client> RegisterClientAsync(RegistrarClienteRequest clienteRequest);
+    Task<AuthResponse> RegisterClientAsync(RegistrarClienteRequest clienteRequest);
 
     Task<IEnumerable<Client>> GetAllClientsAsync();
 

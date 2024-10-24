@@ -21,18 +21,13 @@ public class ClientsController : ControllerBase
     [Authorize(Roles = Roles.Administrador)]
     public async Task<IActionResult> Register(RegistrarClienteRequest clienteRequest)
     {
-        Client c = await _clientService.RegisterClientAsync(clienteRequest);
+        AuthResponse response = await _clientService.RegisterClientAsync(clienteRequest);
         
-        if (c.Id.Equals(Guid.Empty))
+        if (response.success)
         {
-            AuthResponse response = new AuthResponse(false, string.Empty, c.Name);
-            return Unauthorized(response);
-        }
-        else
-        {
-            AuthResponse response = new AuthResponse(true, string.Empty, "Registro criado com sucesso!");
             return Ok(response);
         }
+        return BadRequest(response);
     }
     
     [HttpGet("list")]

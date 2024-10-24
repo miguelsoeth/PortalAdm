@@ -61,23 +61,19 @@ public class UsersController : ControllerBase
         var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
         var userClient = User.FindFirst("client")?.Value;
         
-        if (userRole == null || userClient == null)
-            return BadRequest(new AuthResponse(false, String.Empty, "Erro ao adquirir informações do usuário atual!"));
+        AuthResponse response = await _userService.RegisterUserAsync(usuarioRequest, userRole, userClient);
         
-        
-        User u = await _userService.RegisterUserAsync(usuarioRequest, userRole, userClient);
-        
-        if (u.IsActive)
+        if (response.success)
         {
-            AuthResponse response = new AuthResponse(true, string.Empty, "Registro criado com sucesso!");
             return Ok(response);
         }
-        else
+
+        if (response is { success: false, token: "Forbid" })
         {
-            AuthResponse response = new AuthResponse(false, string.Empty, u.Name);
-            if (u.Name.Equals("Não é possível registrar um Administrador!")) return Forbid();
-            return Unauthorized(response);
+            return Forbid();
         }
+        
+        return Unauthorized(response);
     }
     
     [HttpPost("login")]

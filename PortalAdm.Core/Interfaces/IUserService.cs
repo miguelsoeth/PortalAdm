@@ -5,7 +5,7 @@ namespace PortalAdm.Core.Interfaces;
 
 public interface IUserService
 {
-    Task<User> RegisterUserAsync(RegistrarUsuarioRequest usuarioRequest, string userRole, string userClient);
+    Task<AuthResponse> RegisterUserAsync(RegistrarUsuarioRequest usuarioRequest, string? userRole, string? userClient);
     Task<User?> LoginUserAsync(LoginRequest request);
     Task<IEnumerable<UserListResponse>> GetAllUsersAsync(string userRole, string userClient);
 }

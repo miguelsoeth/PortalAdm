@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     
     public DbSet<Client> Clients { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<Product> Products { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +48,21 @@ public class AppDbContext : DbContext
             entity.HasData(
                 new User("Admin", "admin@mail", "LxbyMDmF9PLnsdIgMNb4hw==:RCcI4rpkmM/kaZGyTXk1RD1h86z5fYHrhOPIny1QsUg=", Roles.Administrador, _admClientId)
             );
+        });
+        
+        
+        
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.ToTable("tbl_produtos");
+            entity.HasKey(u => u.Id);
+            entity.Property(u => u.Name).IsRequired().HasMaxLength(100);
+            entity.Property(u => u.Providers).IsRequired();
+            
+            entity.HasOne<Client>()
+                .WithMany()
+                .HasForeignKey(u => u.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

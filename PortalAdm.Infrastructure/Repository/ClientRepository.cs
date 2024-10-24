@@ -31,7 +31,7 @@ public class ClientRepository : IClientRepository
             var existingUser = await _context.Clients.FirstOrDefaultAsync(u => u.Document == client.Document);
             if (existingUser != null)
             {
-                return "Um cliente com esse documento já existe!";
+                throw new Exception("Um cliente com esse documento já existe!");
             }
             await _context.Clients.AddAsync(client);
             int result = await _context.SaveChangesAsync();
@@ -40,11 +40,11 @@ public class ClientRepository : IClientRepository
                 return string.Empty;
             }
 
-            return "Erro ao registrar cliente!";
+            throw new Exception("Erro ao registrar cliente!");
         }
         catch (Exception ex)
         {
-            return $"Erro ao adicionar cliente: {ex.Message}";
+            return ex.Message;
         }
     }
     

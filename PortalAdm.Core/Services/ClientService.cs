@@ -13,27 +13,27 @@ public class ClientService : IClientService
         _clientRepository = clientRepository;
     }
 
-    public async Task<Client> RegisterClientAsync(RegistrarClienteRequest clienteRequest)
+    public async Task<AuthResponse> RegisterClientAsync(RegistrarClienteRequest clienteRequest)
     {
         if (string.IsNullOrWhiteSpace(clienteRequest.Name))
         {
-            return new Client("Nome é obrigatório");
+            return new AuthResponse(false, string.Empty, "Nome é obrigatório");
         }
         
         if (string.IsNullOrWhiteSpace(clienteRequest.Document))
         {
-            return new Client("Documento é obrigatório");
+            return new AuthResponse(false, string.Empty, "Documento é obrigatório");
         }
         
         var client = new Client(clienteRequest.Name, clienteRequest.Document, 0);
-        string success = await _clientRepository.AddAsync(client);
+        string result = await _clientRepository.AddAsync(client);
         
-        if (success.Equals(string.Empty))
+        if (result.Equals(string.Empty))
         {
-            return client;
+            return new AuthResponse(true, string.Empty, "Cliente adicionado com sucesso!");
         }
         
-        return new Client(success);
+        return new AuthResponse(false, string.Empty, result);
         
     }
 
