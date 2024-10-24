@@ -61,4 +61,9 @@ public class ProductRepository : IProductRepository
             return ex.Message;
         }
     }
+
+    public async Task<Product?> GetByIdAsync(Guid id)
+    {
+        return await _context.Products.FindAsync(id);
+    }
 }

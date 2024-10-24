@@ -54,4 +54,9 @@ public class ProductService : IProductService
         }
         return await _productRepository.GetForClientAsync(userClient);
     }
+
+    public async Task<Product?> GetProductById(Guid id)
+    {
+        return await _productRepository.GetByIdAsync(id);
+    }
 }
