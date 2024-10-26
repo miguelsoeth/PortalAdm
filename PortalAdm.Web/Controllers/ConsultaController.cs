@@ -22,6 +22,9 @@ public class ConsultaController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Register(ConsultaOnlineRequest consultaRequest)
     {
+        if (User.IsInRole(Roles.Administrador))
+            return Forbid();
+        
         var userMail = User.FindFirst(ClaimTypes.Email)?.Value;
         AuthResponse response = await _consultaService.ConsultarOnline(consultaRequest, userMail);
 
