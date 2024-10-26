@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
+using PortalAdm.Core.Interfaces;
 
-namespace PortalAdm.SharedKernel.Security;
+namespace PortalAdm.Core.Services;
 
 public class Pbkdf2PasswordHasher : IPasswordHasher
 {

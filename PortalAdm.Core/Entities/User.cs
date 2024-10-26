@@ -1,4 +1,4 @@
-using PortalAdm.SharedKernel.Security;
+using PortalAdm.Core.Interfaces;
 
 namespace PortalAdm.Core.Entities
 {

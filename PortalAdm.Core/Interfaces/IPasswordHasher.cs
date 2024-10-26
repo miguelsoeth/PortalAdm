@@ -1,4 +1,4 @@
-namespace PortalAdm.SharedKernel.Security;
+namespace PortalAdm.Core.Interfaces;
 
 public interface IPasswordHasher
 {

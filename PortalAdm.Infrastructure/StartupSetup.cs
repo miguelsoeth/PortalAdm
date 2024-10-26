@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PortalAdm.Core.Interfaces;
+using PortalAdm.Core.Services;
 using PortalAdm.Infrastructure.Data;
 using PortalAdm.Infrastructure.Identity;
 using PortalAdm.Infrastructure.Repository;
-using PortalAdm.SharedKernel.Security;
 using PortalAdm.SharedKernel.Util;
 
 namespace PortalAdm.Infrastructure;

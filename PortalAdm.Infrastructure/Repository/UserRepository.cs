@@ -6,7 +6,6 @@ using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
 using PortalAdm.Core.Interfaces;
 using PortalAdm.Infrastructure.Data;
-using PortalAdm.SharedKernel.Security;
 using PortalAdm.SharedKernel.Util;
 
 namespace PortalAdm.Infrastructure.Repository;
