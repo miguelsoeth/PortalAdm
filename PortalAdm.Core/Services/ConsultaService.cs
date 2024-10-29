@@ -9,11 +9,13 @@ public class ConsultaService : IConsultaService
 {
     private readonly IUserService _userService;
     private readonly IProductService _productService;
+    private readonly IPortalConsultaService _portalConsultaService;
 
-    public ConsultaService(IUserService userService, IProductService productService)
+    public ConsultaService(IUserService userService, IProductService productService, IPortalConsultaService portalConsultaService)
     {
         _userService = userService;
         _productService = productService;
+        _portalConsultaService = portalConsultaService;
     }
 
     public async Task<AuthResponse> ConsultarOnline(ConsultaOnlineRequest consultaRequest, string? userMail)
@@ -35,7 +37,8 @@ public class ConsultaService : IConsultaService
             return new AuthResponse(false, String.Empty, "Produto não encontrado!");
 
         ConsultaOnlineMessage consulta = new ConsultaOnlineMessage(consultaRequest.Document, p, u);
-        Console.WriteLine(consulta);
+
+        var response = await _portalConsultaService.ConsultaOnline(consulta);
         
         return new AuthResponse(true, String.Empty, "Consulta gerada com sucesso!");
     }

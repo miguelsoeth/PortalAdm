@@ -5,6 +5,7 @@ using PortalAdm.Core.Services;
 using PortalAdm.Infrastructure.Data;
 using PortalAdm.Infrastructure.Identity;
 using PortalAdm.Infrastructure.Repository;
+using PortalAdm.Infrastructure.Services;
 using PortalAdm.SharedKernel.Util;
 
 namespace PortalAdm.Infrastructure;
@@ -17,6 +18,7 @@ public static class StartupSetup
         services.AddScoped<IClientRepository, ClientRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
+        services.AddScoped<IPortalConsultaService, PortalConsultaService>();
     }
     
     public static void AddDbContext(this IServiceCollection services) {

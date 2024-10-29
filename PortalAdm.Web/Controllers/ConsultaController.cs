@@ -18,9 +18,9 @@ public class ConsultaController : ControllerBase
         _consultaService = consultaService;
     }
 
-    [HttpPost("consulta-online")]
+    [HttpPost("online")]
     [Authorize]
-    public async Task<IActionResult> Register(ConsultaOnlineRequest consultaRequest)
+    public async Task<IActionResult> Online(ConsultaOnlineRequest consultaRequest)
     {
         if (User.IsInRole(Roles.Administrador))
             return Forbid();
