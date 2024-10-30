@@ -1,6 +1,8 @@
-﻿using System.Text;
+﻿using System.Net;
+using System.Text;
 using System.Text.Json;
 using PortalAdm.Core.DTOs;
+using PortalAdm.Core.Exceptions;
 using PortalAdm.Core.Interfaces;
 
 namespace PortalAdm.Infrastructure.Services;
@@ -14,19 +16,21 @@ public class PortalConsultaService : IPortalConsultaService
         _http = http;
     }
 
-    public async Task<ConsultaOnlineResponse> ConsultaOnline(ConsultaOnlineMessage request)
+    public async Task<ConsultaOnlineResult> ConsultaOnline(ConsultaOnlineMessage request)
     {
         var jsonContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-
         var response = await _http.PostAsync("http://portalconsulta:8080/api/Consulta/online", jsonContent);
-            
+        
         if (!response.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException($"Request failed with status code {response.StatusCode}");
-        }
+            throw new DefaultException($"Pedido falhou com StatusCode {response.StatusCode}", HttpStatusCode.BadRequest);
 
         var responseContent = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<ConsultaOnlineResponse>(responseContent);
+        ConsultaOnlineResult? result = JsonSerializer.Deserialize<ConsultaOnlineResult>(responseContent);
+        
+        if (result == null)
+            throw new DefaultException("Consulta sem resultados", HttpStatusCode.BadRequest);
+
+        return result;
     }
 
     public async Task ConsultaLote(ConsultaOnlineMessage request)

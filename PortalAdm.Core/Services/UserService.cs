@@ -1,5 +1,7 @@
+using System.Net;
 using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
+using PortalAdm.Core.Exceptions;
 using PortalAdm.Core.Interfaces;
 using PortalAdm.SharedKernel;
 using PortalAdm.SharedKernel.Util;
@@ -17,73 +19,52 @@ public class UserService : IUserService
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<AuthResponse> RegisterUserAsync(RegistrarUsuarioRequest usuarioRequest, string? userRole, string? userClient)
+    public async Task RegisterUserAsync(string name, string email, string pwd, string role, string? clientId, string? userRole, string? userClient)
     {
         if (userRole == null || userClient == null)
-            return new AuthResponse(false, String.Empty, "Erro ao adquirir informações do usuário atual!");
-        
-        if (userRole == Roles.UsuarioGestor && usuarioRequest.Role == Roles.Administrador)
-            return new AuthResponse(false, "Forbid", "Não é permitido adicionar um Administrador!");
-        
+            throw new DefaultException("Erro ao adquirir informações do usuário atual!", HttpStatusCode.BadRequest);
+
+        if (userRole == Roles.UsuarioGestor && role == Roles.Administrador)
+            throw new DefaultException("Não é permitido adicionar um Administrador!", HttpStatusCode.Forbidden);
+
         if (userRole == Roles.UsuarioGestor)
-            usuarioRequest.ClientId = userClient;
-        
-        if (!Roles.GetAllRoles().Contains(usuarioRequest.Role))
-            return new AuthResponse(false, String.Empty, "Papel inexistente!");
-        
-        if (string.IsNullOrWhiteSpace(usuarioRequest.Name))
-        {
-            return new AuthResponse(false, String.Empty, "Nome é obrigatório");
-        }
+            clientId = userClient;
 
-        if (string.IsNullOrWhiteSpace(usuarioRequest.Email))
-        {
-            return new AuthResponse(false, String.Empty, "Email é obrigatório");
-        }
+        if (!Roles.GetAllRoles().Contains(role))
+            throw new DefaultException("Papel inexistente!", HttpStatusCode.BadRequest);
 
-        if (string.IsNullOrWhiteSpace(usuarioRequest.Password))
-        {
-            return new AuthResponse(false, String.Empty, "Senha é obrigatória");
-        }
+        if (string.IsNullOrWhiteSpace(name))
+            throw new DefaultException("Nome é obrigatório", HttpStatusCode.BadRequest);
 
-        if (string.IsNullOrWhiteSpace(usuarioRequest.Role))
-        {
-            return new AuthResponse(false, String.Empty, "Papel é obrigatório");
-        }
-        
-        if (userRole == Roles.Administrador && string.IsNullOrWhiteSpace(usuarioRequest.ClientId))
-        {
-            return new AuthResponse(false, String.Empty, "ClientID é obrigatório");
-        }
+        if (string.IsNullOrWhiteSpace(email))
+            throw new DefaultException("Email é obrigatório", HttpStatusCode.BadRequest);
 
-        var passwordHash = _passwordHasher.HashPassword(usuarioRequest.Password);
+        if (string.IsNullOrWhiteSpace(pwd))
+            throw new DefaultException("Senha é obrigatória", HttpStatusCode.BadRequest);
 
-        var user = new User(usuarioRequest.Name, usuarioRequest.Email, passwordHash, usuarioRequest.Role, new Guid(usuarioRequest.ClientId!));
+        if (string.IsNullOrWhiteSpace(role))
+            throw new DefaultException("Papel é obrigatório", HttpStatusCode.BadRequest);
 
-        string success = await _userRepository.AddAsync(user);
+        if (userRole == Roles.Administrador && string.IsNullOrWhiteSpace(clientId))
+            throw new DefaultException("ID do Cliente é obrigatório", HttpStatusCode.BadRequest);
 
-        if (success.Equals(string.Empty))
-        {
-            return new AuthResponse(true, String.Empty, "Usuário registrado com sucesso!");
-        }
-        
-        return new AuthResponse(false, String.Empty, success);
+        var passwordHash = _passwordHasher.HashPassword(pwd);
+
+        var user = new User(name, email, passwordHash, role, new Guid(clientId!));
+
+        await _userRepository.AddAsync(user);
     }
     
-    public async Task<User?> LoginUserAsync(LoginRequest request)
+    public async Task<User> LoginUserAsync(string email, string pwd)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || 
-            string.IsNullOrWhiteSpace(request.Password))
-        {
-            throw new ArgumentException("Email and password cannot be empty.");
-        }
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(pwd))
+            throw new DefaultException("Email e/ou password não podem estar vazios!", HttpStatusCode.BadRequest);
 
-        var user = await _userRepository.GetByCredentialsAsync(request.Email, request.Password);
-
+        var user = await _userRepository.GetByCredentialsAsync(email, pwd);
         return user;
     }
 
-    public async Task<IEnumerable<UserListResponse>> GetAllUsersAsync(string userRole, string userClient)
+    public async Task<IEnumerable<User>> GetAllUsersAsync(string userRole, string userClient)
     {
         if (userRole.Equals(Roles.UsuarioGestor))
         {
@@ -92,7 +73,7 @@ public class UserService : IUserService
         return await _userRepository.GetAllAsync();
     }
 
-    public async Task<User?> GetUserByEmailAsync(string email)
+    public async Task<User> GetUserByEmailAsync(string email)
     {
         return await _userRepository.GetByEmailAsync(email);
     }

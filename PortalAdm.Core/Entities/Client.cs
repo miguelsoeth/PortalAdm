@@ -1,3 +1,6 @@
+using System.Net;
+using PortalAdm.Core.Exceptions;
+
 namespace PortalAdm.Core.Entities;
 
 public class Client
@@ -51,7 +54,7 @@ public class Client
     {
         if (value <= 0)
         {
-            throw new ArgumentException("O valor a aumentar deve ser maior que zero.");
+            throw new DefaultException("O valor a aumentar deve ser maior que zero.", HttpStatusCode.BadRequest);
         }
         
         Credit += value;
@@ -61,12 +64,12 @@ public class Client
     {
         if (value <= 0)
         {
-            throw new ArgumentException("O valor a diminuir deve ser maior que zero.");
+            throw new DefaultException("O valor a diminuir deve ser maior que zero.", HttpStatusCode.BadRequest);
         }
 
         if (Credit <= 0 || Credit < value)
         {
-            throw new InvalidOperationException("Crédito insuficiente para diminuir.");
+            throw new DefaultException("Crédito insuficiente para diminuir.", HttpStatusCode.BadRequest);
         }
 
         Credit -= value;

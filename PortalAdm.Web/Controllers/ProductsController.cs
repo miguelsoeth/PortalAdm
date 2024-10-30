@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
+using PortalAdm.Core.Exceptions;
 using PortalAdm.Core.Interfaces;
 
 namespace PortalAdm.Controllers;
@@ -20,20 +21,23 @@ public class ProductsController : ControllerBase
 
     [HttpPost("add")]
     [Authorize(Roles = Roles.Administrador)]
-    public async Task<IActionResult> Add(RegistrarProdutoRequest produtoRequest)
+    public async Task<ActionResult<AuthResponse>> Add(RegistrarProdutoRequest request)
     {
-        AuthResponse response = await _productService.AddProductAsync(produtoRequest);
-        
-        if (response.success)
+        try
         {
-            return Ok(response);
+            await _productService.AddProductAsync(request.Name, request.Providers, request.ClientId, request.Price);
+            return Ok(new AuthResponse(true, String.Empty, "Produto adicionado com sucesso!"));
         }
-        return BadRequest(response);
+        catch (DefaultException e)
+        {
+            Console.WriteLine(e.ToString());
+            return StatusCode((int)e.Result, new AuthResponse(false, string.Empty, e.Reason));
+        }
     }
     
     [HttpGet("list")]
     [Authorize]
-    public async Task<IActionResult> List()
+    public async Task<ActionResult<IEnumerable<Product>>> List()
     {
         var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
         var userClient = User.FindFirst("client")?.Value;

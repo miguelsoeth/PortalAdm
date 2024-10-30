@@ -1,5 +1,7 @@
-﻿using PortalAdm.Core.DTOs;
+﻿using System.Net;
+using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
+using PortalAdm.Core.Exceptions;
 using PortalAdm.Core.Interfaces;
 using PortalAdm.SharedKernel.Util;
 
@@ -18,28 +20,20 @@ public class ConsultaService : IConsultaService
         _portalConsultaService = portalConsultaService;
     }
 
-    public async Task<AuthResponse> ConsultarOnline(ConsultaOnlineRequest consultaRequest, string? userMail)
+    public async Task<ConsultaOnlineResult> ConsultarOnline(Guid productId, string document, string? userMail)
     {
-        if(!DocumentUtil.CpfCnpj(consultaRequest.Document))
-            return new AuthResponse(false, String.Empty, "Documento inválido!");
+        if(!DocumentUtil.CpfCnpj(document))
+            throw new DefaultException("Documento inválido!", HttpStatusCode.BadRequest);
         
         if (userMail == null)
-            return new AuthResponse(false, String.Empty, "Erro ao adquirir informações do usuário atual!");
+            throw new DefaultException("Erro ao adquirir informações do usuário atual!", HttpStatusCode.BadRequest);
 
-        User? u = await _userService.GetUserByEmailAsync(userMail);
-        
-        if (u == null)
-            return new AuthResponse(false, String.Empty, "Usuário não encontrado!");
+        User u = await _userService.GetUserByEmailAsync(userMail);
+        Product p = await _productService.GetProductById(productId);
 
-        Product? p = await _productService.GetProductById(consultaRequest.ProductId);
-        
-        if (p == null)
-            return new AuthResponse(false, String.Empty, "Produto não encontrado!");
-
-        ConsultaOnlineMessage consulta = new ConsultaOnlineMessage(consultaRequest.Document, p, u);
+        ConsultaOnlineMessage consulta = new ConsultaOnlineMessage(document, p, u);
 
         var response = await _portalConsultaService.ConsultaOnline(consulta);
-        
-        return new AuthResponse(true, String.Empty, "Consulta gerada com sucesso!");
+        return response;
     }
 }

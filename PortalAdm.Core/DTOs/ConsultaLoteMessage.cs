@@ -2,21 +2,24 @@
 
 namespace PortalAdm.Core.DTOs;
 
-public class ConsultaOnlineMessage
+public class ConsultaLoteMessage
 {
-    public string Document { get; set; }
+    public List<string> Document { get; set; }
     public Product Product { get; set; }
     public User User { get; set; }
+    public decimal Total { get; set; }
     public DateTime Date { get; private set; }
-
     
-    public ConsultaOnlineMessage(string document, Product product, User user)
+
+    public ConsultaLoteMessage(List<string> document, Product product, User user, decimal total)
     {
         Document = document;
         Product = product;
         User = user;
+        Total = total;
         Date = DateTime.Now;
     }
+
     public void SetDate(DateTime date)
     {
         Date = date;

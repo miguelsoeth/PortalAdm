@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
+using PortalAdm.Core.Exceptions;
 using PortalAdm.Core.Interfaces;
 
 namespace PortalAdm.Controllers;
@@ -19,15 +21,18 @@ public class ClientsController : ControllerBase
     
     [HttpPost("register")]
     [Authorize(Roles = Roles.Administrador)]
-    public async Task<IActionResult> Register(RegistrarClienteRequest clienteRequest)
+    public async Task<ActionResult<AuthResponse>> Register(RegistrarClienteRequest request)
     {
-        AuthResponse response = await _clientService.RegisterClientAsync(clienteRequest);
-        
-        if (response.success)
+        try
         {
-            return Ok(response);
+            await _clientService.RegisterClientAsync(request.Name, request.Document);
+            return Ok(new AuthResponse(true, string.Empty, "Cliente registrado com sucesso!"));
         }
-        return BadRequest(response);
+        catch (DefaultException e)
+        {
+            Console.WriteLine(e.ToString());
+            return StatusCode((int)e.Result, new AuthResponse(false, string.Empty, e.Reason));
+        }
     }
     
     [HttpGet("list")]
@@ -40,27 +45,33 @@ public class ClientsController : ControllerBase
     
     [HttpPost("credit/increase")]
     [Authorize(Roles = Roles.Administrador)]
-    public async Task<IActionResult> Increase(Guid id, decimal value)
+    public async Task<ActionResult<AuthResponse>> Increase(Guid id, decimal value)
     {
-        //value = Math.Round(value, 2);
-        AuthResponse response = await _clientService.IncreaseCredit(id, value);
-        if (response.success)
+        try
         {
-            return Ok(response);
+            await _clientService.IncreaseCredit(id, value);
+            return Ok(new AuthResponse(true, string.Empty, "Crédito do cliente aumentado com sucesso!"));
         }
-        return BadRequest(response);
+        catch (DefaultException e)
+        {
+            Console.WriteLine(e.ToString());
+            return StatusCode((int)e.Result, new AuthResponse(false, string.Empty, e.Reason));
+        }
     }
     
     [HttpPost("credit/decrease")]
     [Authorize(Roles = Roles.Administrador)]
-    public async Task<IActionResult> Decrease(Guid id, decimal value)
+    public async Task<ActionResult<AuthResponse>> Decrease(Guid id, decimal value)
     {
-        //value = Math.Round(value, 2);
-        AuthResponse response = await _clientService.DecreaseCredit(id, value);
-        if (response.success)
+        try
         {
-            return Ok(response);
+            await _clientService.DecreaseCredit(id, value);
+            return Ok(new AuthResponse(true, string.Empty, "Crédito do cliente aumentado com sucesso!"));
         }
-        return BadRequest(response);
+        catch (DefaultException e)
+        {
+            Console.WriteLine(e.ToString());
+            return StatusCode((int)e.Result, new AuthResponse(false, string.Empty, e.Reason));
+        }
     }
 }

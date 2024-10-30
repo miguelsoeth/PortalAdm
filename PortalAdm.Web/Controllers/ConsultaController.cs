@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
+using PortalAdm.Core.Exceptions;
 using PortalAdm.Core.Interfaces;
 
 namespace PortalAdm.Controllers;
@@ -20,18 +21,33 @@ public class ConsultaController : ControllerBase
 
     [HttpPost("online")]
     [Authorize]
-    public async Task<IActionResult> Online(ConsultaOnlineRequest consultaRequest)
+    public async Task<ActionResult<ConsultaOnlineResult>> Online(ConsultaOnlineRequest request)
+    {
+        if (User.IsInRole(Roles.Administrador))
+            return Forbid();
+        
+        try
+        {
+            var userMail = User.FindFirst(ClaimTypes.Email)?.Value;
+            ConsultaOnlineResult response = await _consultaService.ConsultarOnline(request.ProductId, request.Document, userMail);
+            return response;
+        }
+        catch (DefaultException e)
+        {
+            Console.WriteLine(e.ToString());
+            return StatusCode((int)e.Result, new AuthResponse(false, string.Empty, e.Reason));
+        }
+    }
+    
+    [HttpPost("lote")]
+    [Authorize]
+    public async Task<IActionResult> Lote(Guid ProductId, IFormFile file)
     {
         if (User.IsInRole(Roles.Administrador))
             return Forbid();
         
         var userMail = User.FindFirst(ClaimTypes.Email)?.Value;
-        AuthResponse response = await _consultaService.ConsultarOnline(consultaRequest, userMail);
 
-        if (response.success)
-        {
-            return Ok(response);
-        }
-        return BadRequest(response);
+        return Ok();
     }
 }

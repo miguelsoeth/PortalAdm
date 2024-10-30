@@ -1,5 +1,7 @@
+using System.Net;
 using Microsoft.EntityFrameworkCore;
 using PortalAdm.Core.Entities;
+using PortalAdm.Core.Exceptions;
 using PortalAdm.Core.Interfaces;
 using PortalAdm.Infrastructure.Data;
 
@@ -14,9 +16,14 @@ public class ClientRepository : IClientRepository
         _context = context;
     }
 
-    public async Task<Client?> GetById(Guid id)
+    public async Task<Client> GetById(Guid id)
     {
-        return await _context.Clients.FindAsync(id);
+        Client? c = await _context.Clients.FindAsync(id);
+
+        if (c == null)
+            throw new DefaultException("Cliente não encontrado!", HttpStatusCode.BadRequest);
+
+        return c;
     }
 
     public async Task<IEnumerable<Client>> GetAllAsync()
@@ -24,75 +31,41 @@ public class ClientRepository : IClientRepository
         return await _context.Clients.ToListAsync();
     }
 
-    public async Task<string> AddAsync(Client client)
+    public async Task AddAsync(Client client)
     {
-        try
+        var existingUser = await _context.Clients.FirstOrDefaultAsync(u => u.Document == client.Document);
+        
+        if (existingUser != null)
+            throw new DefaultException("Um cliente com esse documento já existe!", HttpStatusCode.BadRequest);
+        
+        await _context.Clients.AddAsync(client);
+        int result = await _context.SaveChangesAsync();
+        if (result <= 0)
         {
-            var existingUser = await _context.Clients.FirstOrDefaultAsync(u => u.Document == client.Document);
-            if (existingUser != null)
-            {
-                throw new Exception("Um cliente com esse documento já existe!");
-            }
-            await _context.Clients.AddAsync(client);
-            int result = await _context.SaveChangesAsync();
-            if (result > 0)
-            {
-                return string.Empty;
-            }
-
-            throw new Exception("Erro ao registrar cliente!");
-        }
-        catch (Exception ex)
-        {
-            return ex.Message;
+            throw new DefaultException("Erro ao registrar cliente!", HttpStatusCode.BadRequest);
         }
     }
     
-    public async Task<string> IncreaseCredit(Guid id, decimal value)
+    public async Task IncreaseCredit(Client client, decimal value)
     {
-        try
-        {
-            var client = await GetById(id);
-            if (client == null) throw new Exception("Não foi possível encontrar o cliente");
-            
-            client.IncreaseCredit(value);
-            
-            _context.Clients.Update(client);
-            int result = await _context.SaveChangesAsync();
-            if (result > 0)
-            {
-                return string.Empty;
-            }
-
-            throw new Exception("Não foi possível atualizar o crédito do cliente");
-        }
-        catch (Exception ex)
-        {
-            return ex.Message;
-        }
+        client.IncreaseCredit(value);
+        _context.Clients.Update(client);
+        int result = await _context.SaveChangesAsync();
+        
+        if (result <= 0)
+            throw new DefaultException("Não foi possível atualizar o crédito do cliente", HttpStatusCode.InternalServerError);
     }
     
-    public async Task<string> DecreaseCredit(Guid id, decimal value)
+    public async Task DecreaseCredit(Client client, decimal value)
     {
-        try
-        {
-            var client = await GetById(id);
-            if (client == null) throw new Exception("Não foi possível encontrar o cliente");
-            
-            client.DecreaseCredit(value);
-            
-            _context.Clients.Update(client);
-            int result = await _context.SaveChangesAsync();
-            if (result > 0)
-            {
-                return string.Empty;
-            }
-
-            throw new Exception("Não foi possível atualizar o crédito do cliente");
-        }
-        catch (Exception ex)
-        {
-            return ex.Message;
-        }
+        if (client == null)
+            throw new DefaultException("Não foi possível encontrar o cliente", HttpStatusCode.BadRequest);
+        
+        client.DecreaseCredit(value);
+        _context.Clients.Update(client);
+        int result = await _context.SaveChangesAsync();
+        
+        if (result <= 0)
+            throw new DefaultException("Não foi possível atualizar o crédito do cliente", HttpStatusCode.InternalServerError);
     }
 }

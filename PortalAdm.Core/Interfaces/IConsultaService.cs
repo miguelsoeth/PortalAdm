@@ -4,5 +4,5 @@ namespace PortalAdm.Core.Interfaces;
 
 public interface IConsultaService
 {
-    Task<AuthResponse> ConsultarOnline(ConsultaOnlineRequest consultaRequest, string? userMail);
+    Task<ConsultaOnlineResult> ConsultarOnline(Guid productId, string document, string? userMail);
 }

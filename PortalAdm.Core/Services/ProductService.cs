@@ -1,5 +1,7 @@
-﻿using PortalAdm.Core.DTOs;
+﻿using System.Net;
+using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
+using PortalAdm.Core.Exceptions;
 using PortalAdm.Core.Interfaces;
 
 namespace PortalAdm.Core.Services;
@@ -13,50 +15,40 @@ public class ProductService : IProductService
         _productRepository = productRepository;
     }
 
-    public async Task<AuthResponse> AddProductAsync(RegistrarProdutoRequest productRequest)
+    public async Task AddProductAsync(string name, List<Guid> providers, Guid clientId, decimal price)
     {
-        if (string.IsNullOrWhiteSpace(productRequest.Name))
-        {
-            return new AuthResponse(false, string.Empty, "Nome é obrigatório");
-        }
+        if (string.IsNullOrWhiteSpace(name))
+            throw new DefaultException("Nome é obrigatório", HttpStatusCode.BadRequest);
         
-        if (productRequest.Providers.Count == 0)
-        {
-            return new AuthResponse(false, string.Empty, "Provedores vazio!");
-        }
+        if (providers.Count == 0)
+            throw new DefaultException("Provedores vazio!", HttpStatusCode.BadRequest);
         
-        if (productRequest.Price.Equals(null) || productRequest.Price <= 0 )
-        {
-            return new AuthResponse(false, string.Empty, "Preço inválido!");
-        }
+        if (price.Equals(null) || price <= 0 )
+            throw new DefaultException("Preço informado inválido!", HttpStatusCode.BadRequest);
         
-        if (productRequest.ClientId.Equals(null))
-        {
-            return new AuthResponse(false, string.Empty, "ClientId é obrigatório");
-        }
+        if (clientId.Equals(null))
+            throw new DefaultException("ID do Cliente é obrigatório", HttpStatusCode.BadRequest);
         
-        var product = new Product(productRequest.Name, productRequest.Providers, productRequest.Price, productRequest.ClientId);
-        string result = await _productRepository.AddAsync(product);
-        
-        if (result.Equals(string.Empty))
-        {
-            return new AuthResponse(true, string.Empty, "Produto adicionado com sucesso!");
-        }
-        
-        return new AuthResponse(false, string.Empty, result);
+        var product = new Product(name, providers, price, clientId);
+        await _productRepository.AddAsync(product);
     }
 
     public async Task<IEnumerable<Product>> GetAllProductsAsync(string userRole, string userClient)
     {
         if (userRole.Equals(Roles.Administrador))
         {
-            return await _productRepository.GetAllAsync();            
+            return await _productRepository.GetAllAsync();
         }
         return await _productRepository.GetForClientAsync(userClient);
     }
 
-    public async Task<Product?> GetProductById(Guid id)
+    public async Task<Product> GetProductById(Guid id)
     {
-        return await _productRepository.GetByIdAsync(id);
+        Product p = await _productRepository.GetByIdAsync(id);
+
+        if (p == null)
+            throw new DefaultException("Produto não encontrado!", HttpStatusCode.BadRequest);
+
+        return p;
     }
 }

@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Net;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using PortalAdm.Core.Entities;
+using PortalAdm.Core.Exceptions;
 using PortalAdm.Core.Interfaces;
 using PortalAdm.Infrastructure.Data;
 
@@ -29,36 +31,19 @@ public class ProductRepository : IProductRepository
             .ToListAsync();
     }
 
-    public async Task<string> AddAsync(Product product)
+    public async Task AddAsync(Product product)
     {
-        try
+        var existingProduct = await _context.Products.FirstOrDefaultAsync(u => u.Name == product.Name && u.ClientId == product.ClientId);
+        if (existingProduct != null)
         {
-            var existingProduct = await _context.Products.FirstOrDefaultAsync(u => u.Name == product.Name && u.ClientId == product.ClientId);
-            if (existingProduct != null)
-            {
-                throw new Exception("Um produto com esse nome já existe!");
-            }
-            
-            await _context.Products.AddAsync(product);
-            int result = await _context.SaveChangesAsync();
-            if (result > 0)
-            {
-                return string.Empty;
-            }
-            
-            throw new Exception("Erro ao registrar produto!");
+            throw new DefaultException("Um produto com esse nome já existe!", HttpStatusCode.BadRequest);
         }
-        catch (Exception ex)
+        
+        await _context.Products.AddAsync(product);
+        int result = await _context.SaveChangesAsync();
+        if (result <= 0)
         {
-            if (ex.InnerException is PostgresException e)
-            {
-                if (e.SqlState == PostgresErrorCodes.ForeignKeyViolation)
-                    return $"Chave estrangeira {e.ConstraintName} incorreta!";
-                
-                return e.Message;
-            }
-            
-            return ex.Message;
+            throw new DefaultException("Não foi possível adicionar o produto!", HttpStatusCode.InternalServerError);
         }
     }
 

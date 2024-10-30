@@ -5,10 +5,10 @@ namespace PortalAdm.Core.Interfaces;
 
 public interface IClientService
 {
-    Task<AuthResponse> RegisterClientAsync(RegistrarClienteRequest clienteRequest);
+    Task RegisterClientAsync(string name, string document);
 
     Task<IEnumerable<Client>> GetAllClientsAsync();
 
-    Task<AuthResponse> IncreaseCredit(Guid id, decimal value);
-    Task<AuthResponse> DecreaseCredit(Guid id, decimal value);
+    Task IncreaseCredit(Guid id, decimal value);
+    Task DecreaseCredit(Guid id, decimal value);
 }

@@ -1,3 +1,5 @@
+using System.Net;
+
 namespace PortalAdm.Core.DTOs;
 
 public class AuthResponse

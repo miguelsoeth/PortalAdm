@@ -1,10 +1,11 @@
+using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalAdm.Core.Entities;
 using PortalAdm.Core.DTOs;
+using PortalAdm.Core.Exceptions;
 using PortalAdm.Core.Interfaces;
-using PortalAdm.SharedKernel.Util;
 
 namespace PortalAdm.Controllers;
 
@@ -12,8 +13,8 @@ namespace PortalAdm.Controllers;
 [ApiController]
 public class UsersController : ControllerBase
 {
-    private IUserService _userService;
-    private ITokenService _tokenService;
+    private readonly IUserService _userService;
+    private readonly ITokenService _tokenService;
 
     public UsersController(IUserService userService, ITokenService tokenService)
     {
@@ -23,7 +24,7 @@ public class UsersController : ControllerBase
     
     [HttpGet("roles")]
     [Authorize(Roles = $"{Roles.Administrador},{Roles.UsuarioGestor}")]
-    public async Task<IActionResult> AllRoles()
+    public async Task<ActionResult<string[]>> AllRoles()
     {
         var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
@@ -40,51 +41,50 @@ public class UsersController : ControllerBase
 
     [HttpGet("list")]
     [Authorize(Roles = $"{Roles.Administrador},{Roles.UsuarioGestor}")]
-    public async Task<IActionResult> List()
+    public async Task<ActionResult<AuthResponse>> List()
     {
         var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
         var userClient = User.FindFirst("client")?.Value;
 
         if (userRole == null || userClient == null )
-        {
-            AuthResponse response = new AuthResponse(false, string.Empty, "Erro ao obter Role/Cliente do usuário!");
-            return BadRequest(response);
-        }
+            return BadRequest(new AuthResponse(false, string.Empty, "Erro ao obter Role/Cliente do usuário!"));
             
         return Ok(await _userService.GetAllUsersAsync(userRole, userClient));
     }
     
     [HttpPost("register")]
     [Authorize(Roles = $"{Roles.Administrador},{Roles.UsuarioGestor}")]
-    public async Task<IActionResult> Register(RegistrarUsuarioRequest usuarioRequest)
+    public async Task<ActionResult<AuthResponse>> Register(RegistrarUsuarioRequest request)
     {
         var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
         var userClient = User.FindFirst("client")?.Value;
         
-        AuthResponse response = await _userService.RegisterUserAsync(usuarioRequest, userRole, userClient);
-        
-        if (response.success)
+        try
         {
-            return Ok(response);
+            await _userService.RegisterUserAsync(request.Name, request.Email, request.Password, request.Role, request.ClientId, userRole, userClient);
+            return Ok(new AuthResponse(true, String.Empty, "Usuário registrado com sucesso!"));
         }
-
-        if (response is { success: false, token: "Forbid" })
+        catch (DefaultException e)
         {
-            return Forbid();
+            Console.WriteLine(e.ToString());
+            return StatusCode((int)e.Result, new AuthResponse(false, string.Empty, e.Reason));
         }
-        
-        return Unauthorized(response);
     }
     
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequest request)
+    public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
     {
-        User? u = await _userService.LoginUserAsync(request);
-        if (u == null) return Unauthorized(new AuthResponse(false, string.Empty,"Login não autorizado."));
-
-        string token = await _tokenService.GenerateJwtToken(u);
-        AuthResponse response = new AuthResponse(true, token, "Login autorizado com sucesso!");
-        return Ok(response);
+        try
+        {
+            User u = await _userService.LoginUserAsync(request.Email, request.Password);
+            string token = await _tokenService.GenerateJwtToken(u);
+            return Ok(new AuthResponse(true, token, "Login autorizado com sucesso!"));
+        }
+        catch (DefaultException e)
+        {
+            Console.WriteLine(e.ToString());
+            return StatusCode((int)e.Result, new AuthResponse(false, string.Empty, e.Reason));
+        }
     }
     
 }
