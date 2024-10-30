@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Net.Mime;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PortalAdm.Core.DTOs;
@@ -48,6 +49,11 @@ public class ConsultaController : ControllerBase
         
         var userMail = User.FindFirst(ClaimTypes.Email)?.Value;
 
-        return Ok();
+        if (file.ContentType == "text/xml")
+        {
+            return Ok(file.ContentType);
+        }
+        
+        return BadRequest(file.ContentType);
     }
 }
