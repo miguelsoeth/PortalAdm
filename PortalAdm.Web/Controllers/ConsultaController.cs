@@ -1,11 +1,16 @@
-﻿using System.Net.Mime;
+﻿using System.Globalization;
+using System.Net;
+using System.Net.Mime;
 using System.Security.Claims;
+using CsvHelper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using PortalAdm.Core.DTOs;
 using PortalAdm.Core.Entities;
 using PortalAdm.Core.Exceptions;
 using PortalAdm.Core.Interfaces;
+using PortalAdm.Core.Models;
 
 namespace PortalAdm.Controllers;
 
@@ -42,18 +47,33 @@ public class ConsultaController : ControllerBase
     
     [HttpPost("lote")]
     [Authorize]
-    public async Task<IActionResult> Lote(Guid ProductId, IFormFile file)
+    public async Task<IActionResult> Lote(ConsultaLoteRequest request)
     {
         if (User.IsInRole(Roles.Administrador))
             return Forbid();
         
-        var userMail = User.FindFirst(ClaimTypes.Email)?.Value;
-
-        if (file.ContentType == "text/xml")
+        try
         {
-            return Ok(file.ContentType);
+            var userMail = User.FindFirst(ClaimTypes.Email)?.Value;
+            
+            if (request.File.ContentType != "text/csv")
+                throw new DefaultException("Tipo de arquivo não aceito!", HttpStatusCode.BadRequest);
+            
+            var file = new FileModel
+            {
+                FileStream = request.File.OpenReadStream(),
+                FileName = request.File.FileName,
+                ContentType = request.File.ContentType
+            };
+
+            await _consultaService.ConsultarLote(request.ProductId, file, userMail);
+            
+            return Ok();
         }
-        
-        return BadRequest(file.ContentType);
+        catch (DefaultException e)
+        {
+            Console.WriteLine(e.ToString());
+            return StatusCode((int)e.Result, new AuthResponse(false, string.Empty, e.Reason));
+        }
     }
 }

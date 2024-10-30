@@ -73,8 +73,11 @@ public class UserService : IUserService
         return await _userRepository.GetAllAsync();
     }
 
-    public async Task<User> GetUserByEmailAsync(string email)
+    public async Task<User> GetUserByEmailAsync(string? email)
     {
+        if (email == null)
+            throw new DefaultException("Erro ao adquirir informações do usuário!", HttpStatusCode.BadRequest);
+        
         return await _userRepository.GetByEmailAsync(email);
     }
 }

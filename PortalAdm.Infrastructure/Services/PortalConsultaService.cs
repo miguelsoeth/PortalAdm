@@ -33,15 +33,12 @@ public class PortalConsultaService : IPortalConsultaService
         return result;
     }
 
-    public async Task ConsultaLote(ConsultaOnlineMessage request)
+    public async Task ConsultaLote(ConsultaLoteMessage request)
     {
         var jsonContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-
         var response = await _http.PostAsync("http://portalconsulta:8080/api/Consulta/lote", jsonContent);
 
         if (!response.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException($"Request failed with status code {response.StatusCode}");
-        }
+            throw new DefaultException($"Pedido falhou com StatusCode {response.StatusCode}", response.StatusCode);
     }
 }
