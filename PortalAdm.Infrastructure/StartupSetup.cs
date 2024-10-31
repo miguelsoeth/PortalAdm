@@ -14,6 +14,17 @@ public static class StartupSetup
 {
     public static void AddInfrastructuresServices(this IServiceCollection services)
     {
+        services.AddFeaturesServices();
+        
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IClientRepository, ClientRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
+        services.AddScoped<IPortalConsultaService, PortalConsultaService>();
+    }
+    
+    public static void AddFeaturesServices(this IServiceCollection services)
+    {
         services.AddJwt(
             AmbienteUtil.GetValue("JWT_ISSUER"),
             AmbienteUtil.GetValue("JWT_AUDIENCE"), 
@@ -21,11 +32,5 @@ public static class StartupSetup
         );
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(AmbienteUtil.GetValue("POSTGRES_CONNECTION")));
-        
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IClientRepository, ClientRepository>();
-        services.AddScoped<IProductRepository, ProductRepository>();
-        services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
-        services.AddScoped<IPortalConsultaService, PortalConsultaService>();
     }
 }
