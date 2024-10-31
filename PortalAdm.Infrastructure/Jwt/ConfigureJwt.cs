@@ -3,13 +3,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using PortalAdm.SharedKernel.Util;
 
-namespace PortalAdm.Infrastructure.Identity;
+namespace DadosPub.SharedKernel.Util;
 
-public static class JwtStartupSetup
+public static class ConfigureJwt
 {
-    public static void RegisterJWT(IServiceCollection services)
+    public static void AddJwt(this IServiceCollection services, string jwtIssuer, string jwtAudience, string jwtKey)
     {
         services.AddAuthentication(authOptions =>
         {
@@ -23,9 +22,9 @@ public static class JwtStartupSetup
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = AmbienteUtil.GetValue("JWT_ISSUER"),
-                ValidAudience = AmbienteUtil.GetValue("JWT_AUDIENCE"),
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AmbienteUtil.GetValue("JWT_KEY")))
+                ValidIssuer = jwtIssuer,
+                ValidAudience = jwtAudience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
             };
         });
 

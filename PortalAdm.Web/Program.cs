@@ -9,8 +9,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddInfrastructuresServices();
-builder.Services.AddDbContext();
-builder.Services.ConfigureJwt();
 
 builder.Services.AddCoreServices();
 
